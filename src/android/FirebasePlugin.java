@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Base64;
 import android.util.Log;
+import android.app.NotificationManager;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
@@ -149,7 +150,10 @@ public class FirebasePlugin extends CordovaPlugin {
             if (args.length() > 1) this.setDefaults(callbackContext, args.getJSONObject(0), args.getString(1));
             else this.setDefaults(callbackContext, args.getJSONObject(0), null);
             return true;
-        } else if (action.equals("verifyPhoneNumber")) {
+        } else if (action.equals("clearAllNotifications")) {
+			this.clearAllNotifications(callbackContext);
+			return true;
+		} else if (action.equals("verifyPhoneNumber")) {
             this.verifyPhoneNumber(callbackContext, args.getString(0), args.getInt(1));
             return true;
         }
@@ -614,7 +618,22 @@ public class FirebasePlugin extends CordovaPlugin {
         return map;
     }
 
-    private PhoneAuthProvider.OnVerificationStateChangedCallbacks mCallbacks;
+    public void clearAllNotifications(final CallbackContext callbackContext) {
+         cordova.getThreadPool().execute(new Runnable() {
+             public void run() {
+                 try {
+                    Context context = cordova.getActivity();
+						NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+						nm.cancelAll();
+						callbackContext.success();
+					} catch (Exception e) {
+                   callbackContext.error(e.getMessage());
+                 }
+             }
+         });
+	}
+	
+	private PhoneAuthProvider.OnVerificationStateChangedCallbacks mCallbacks;
     public void verifyPhoneNumber(final CallbackContext callbackContext, final String number, final int timeOutDuration) {
         cordova.getThreadPool().execute(new Runnable() {
             public void run() {
